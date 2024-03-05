@@ -11,6 +11,13 @@ module.exports = (webpackConfigEnv, argv) => {
   });
 
   return merge(defaultConfig, {
+
+    resolve: {
+      extensions: ['', '.js', '.jsx', '.css'],
+      modules: [
+        './node_modules'
+      ]        
+  },
     plugins: [new MiniCssExtractPlugin()],
     module: {
       rules: [

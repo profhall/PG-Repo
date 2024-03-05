@@ -40,4 +40,4 @@ describe('Root Component', () => {
   //   expect(screen.getByText('Notifications Component')).toBeInTheDocument();
   // });
 
-npm run test});
+});
