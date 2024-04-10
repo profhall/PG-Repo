@@ -1,17 +1,65 @@
-import { render, screen } from '@testing-library/react';
-import Root from './root.component'; // Update this path to the actual location of your Root component
-import { BrowserRouter } from 'react-router-dom';
+// MyAgGridComponent.js
+```
+import React, { useRef, useImperativeHandle, forwardRef } from 'react';
+import { AgGridReact } from 'ag-grid-react';
+import 'ag-grid-community/dist/styles/ag-grid.css';
+import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
 
-describe('Root component', () => {
-  it('renders the text "Workbench Admin Apps"', () => {
-    render(
-      <BrowserRouter>
-        <Root />
-      </BrowserRouter>
-    );
-    // Use the exact text from your component, including case and spacing
-    expect(screen.getByText('Workbench Admin Apps')).toBeInTheDocument();
-  });
+const MyAgGridComponent = forwardRef((props, ref) => {
+  const gridRef = useRef();
 
-  // ... Other tests
+  useImperativeHandle(ref, () => ({
+    getCurrentValue: () => gridRef.current,
+    onSelectionChanged: () => {
+      const selectedNodes = gridRef.current.api.getSelectedNodes();
+      const selectedData = selectedNodes.map(node => node.data);
+      props.onSelectionChanged(selectedData);
+    },
+  }));
+
+  // ...
+
+  return (
+    <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
+      <AgGridReact
+        ref={gridRef}
+        columnDefs={columnDefs}
+        rowData={rowData}
+        onSelectionChanged={() => gridRef.current.onSelectionChanged()}
+        // Other AG Grid props...
+      />
+    </div>
+  );
 });
+
+export default MyAgGridComponent;
+```
+
+```
+// ParentComponent.js
+import React, { useRef, useEffect, useState } from 'react';
+import MyAgGridComponent from './MyAgGridComponent';
+
+const ParentComponent = () => {
+  const gridRef = useRef();
+  const [selectedRows, setSelectedRows] = useState([]);
+
+  const handleSelectionChanged = (selectedData) => {
+    setSelectedRows(selectedData);
+  };
+
+  useEffect(() => {
+    console.log('Selected Rows:', selectedRows);
+    // Perform any necessary actions when the selectedRows change
+  }, [selectedRows]);
+
+  return (
+    <div>
+      <h1>Parent Component</h1>
+      <MyAgGridComponent ref={gridRef} onSelectionChanged={handleSelectionChanged} />
+    </div>
+  );
+};
+
+export default ParentComponent;
+```
