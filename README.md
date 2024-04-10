@@ -1,79 +1,53 @@
-// MyAgGridComponent.js
 ```
-import React, { useRef, useImperativeHandle, forwardRef } from 'react';
+// MyAgGridComponent.js
+import React, { useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-alpine.css';
 
-const MyAgGridComponent = forwardRef((props, ref) => {
-  const gridRef = useRef();
+const MyAgGridComponent = ({ onGridApiChange, ...props }) => {
+  const [gridApi, setGridApi] = useState(null);
 
-  useImperativeHandle(ref, () => ({
-    getCurrentValue: () => gridRef.current,
-    onSelectionChanged: () => {
-      const selectedNodes = gridRef.current.api.getSelectedNodes();
-      const selectedData = selectedNodes.map(node => node.data);
-      props.onSelectionChanged(selectedData);
-    },
-  }));
+  const onGridReady = (params) => {
+    setGridApi(params.api);
+    onGridApiChange(params.api);
+  };
+
+  const onSelectionChanged = () => {
+    const selectedNodes = gridApi.getSelectedNodes();
+    const selectedData = selectedNodes.map(node => node.data);
+    props.onSelectionChanged(selectedData);
+  };
 
   // ...
 
   return (
     <div className="ag-theme-alpine" style={{ height: 400, width: 600 }}>
       <AgGridReact
-        ref={gridRef}
+        onGridReady={onGridReady}
         columnDefs={columnDefs}
         rowData={rowData}
-        onSelectionChanged={() => gridRef.current.onSelectionChanged()}
+        onSelectionChanged={onSelectionChanged}
         // Other AG Grid props...
       />
     </div>
   );
-});
-
-export default MyAgGridComponent;
-```
-
-```
-// ParentComponent.js
-import React, { useRef, useEffect, useState } from 'react';
-import MyAgGridComponent from './MyAgGridComponent';
-
-const ParentComponent = () => {
-  const gridRef = useRef();
-  const [selectedRows, setSelectedRows] = useState([]);
-
-  const handleSelectionChanged = (selectedData) => {
-    setSelectedRows(selectedData);
-  };
-
-  useEffect(() => {
-    console.log('Selected Rows:', selectedRows);
-    // Perform any necessary actions when the selectedRows change
-  }, [selectedRows]);
-
-  return (
-    <div>
-      <h1>Parent Component</h1>
-      <MyAgGridComponent ref={gridRef} onSelectionChanged={handleSelectionChanged} />
-    </div>
-  );
 };
-
-export default ParentComponent;
 ```
-
 ```
 // ParentComponent.js
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import MyAgGridComponent from './MyAgGridComponent';
 
 const ParentComponent = () => {
-  const gridRef = useRef();
+  const [gridApi, setGridApi] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedRowsValue, setSelectedRowsValue] = useState(0);
   const [approvalError, setApprovalError] = useState(false);
+
+  const handleGridApiChange = (api) => {
+    setGridApi(api);
+  };
 
   const handleSelectionChanged = (selectedData) => {
     setSelectedRows(selectedData);
@@ -87,6 +61,11 @@ const ParentComponent = () => {
   };
 
   useEffect(() => {
+    console.log('Grid API:', gridApi);
+    // Perform any necessary actions when the grid API changes
+  }, [gridApi]);
+
+  useEffect(() => {
     console.log('Selected Rows:', selectedRows);
     console.log('Selected Rows Value:', selectedRowsValue);
     console.log('Approval Error:', approvalError);
@@ -96,10 +75,12 @@ const ParentComponent = () => {
   return (
     <div>
       <h1>Parent Component</h1>
-      <MyAgGridComponent ref={gridRef} onSelectionChanged={handleSelectionChanged} />
+      <MyAgGridComponent onGridApiChange={handleGridApiChange} onSelectionChanged={handleSelectionChanged} />
     </div>
   );
 };
 
 export default ParentComponent;
 ```
+
+export default MyAgGridComponent;
